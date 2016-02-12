@@ -461,7 +461,32 @@ def conv_forward_naive(x, w, b, conv_param):
   # TODO: Implement the convolutional forward pass.                           #
   # Hint: you can use the function np.pad for padding.                        #
   #############################################################################
-  pass
+
+  N, C, H, W = x.shape
+  F, C, HH, WW = w.shape
+  F = b.shape[0]
+  P = conv_param["pad"]
+  S = conv_param["stride"]
+  H_R = 1 + (H + 2 * P - HH) / S
+  W_R = 1 + (W + 2 * P - WW) / S
+
+  # print "W,F,P,S,H_R,W_R: ",W,F,P,S,H_R,W_R
+
+  x_pad = np.lib.pad(x,((0,0),(0,0), (P,P), (P,P)), 'constant', constant_values=0)
+  # print "x.shape: "+str(x.shape)
+  # print "w.shape: "+str(w.shape)
+  # print "x_pad.shape: "+str(x_pad.shape)
+
+  out = np.zeros((N,F,H_R,W_R))
+  # print "out.shape: "+str(out.shape)
+  for n in xrange(N): #data
+    for depth in xrange(F): #depth
+      for r in xrange(0,H,S): #row
+        for c in xrange(0,W,S): #column
+          # print "=====x_pad====="+"("+str(r)+":"+str(r+HH)+","+str(c)+":"+str(c+WW)+")"
+          # print "filling out[n,depth,hr,wr]",n,depth,hr,wr
+          out[n,depth,r/S,c/S] = np.sum(x_pad[n,:,r:r+HH,c:c+WW] * w[depth,:,:,:]) + b[depth]
+
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -486,7 +511,50 @@ def conv_backward_naive(dout, cache):
   #############################################################################
   # TODO: Implement the convolutional backward pass.                          #
   #############################################################################
-  pass
+
+  # before starting, look at the convolution demo at
+  # http://cs231n.github.io/convolutional-networks/#conv
+  # and look at the affine_backward method, the solution will be
+  # trivial, imagine the calculations with the demo
+
+  x, w, b, conv_param = cache
+
+  N, F, H_R, W_R = dout.shape
+  N, C, H, W = x.shape
+  F, C, HH, WW = w.shape
+  P = conv_param["pad"]
+  S = conv_param["stride"]
+  x_pad = np.lib.pad(x,((0,0),(0,0), (P,P), (P,P)), 'constant', constant_values=0)
+
+  dx = np.zeros(x_pad.shape)
+  dw = np.zeros(w.shape)
+  db = np.zeros(b.shape)
+
+  # print "W,F,P,S,H_R,W_R: ",W,F,P,S,H_R,W_R
+  # print "dout.shape: "+str(dout.shape)
+
+  for n in xrange(N): #data
+    for depth in xrange(F): #depth
+      for r in xrange(0,H,S): #row
+        for c in xrange(0,W,S): #column
+          dx[n,:,r:r+HH,c:c+WW] += w[depth,:,:,:] * dout[n,depth,r/S,c/S]
+
+  #deleting padded rows
+  delete_rows    = range(P) + range(H+P,H+2*P,1)
+  delete_columns = range(P) + range(W+P,W+2*P,1)
+
+  dx = np.delete(dx, delete_rows, axis=2)     #height
+  dx = np.delete(dx, delete_columns, axis=3)  #width
+
+  for n in xrange(N): #data
+    for depth in xrange(F): #depth
+      for r in xrange(H_R): #row
+        for c in xrange(W_R): #column
+          dw[depth,:,:,:] += x_pad[n,:,r*S:r*S+HH,c*S:c*S+WW] * dout[n,depth,r,c]
+
+  for depth in range(F):
+    db[depth] = np.sum(dout[:, depth, :, :])
+
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################

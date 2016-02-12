@@ -380,14 +380,14 @@ class FullyConnectedNet(object):
     list_dw = {key[1:]: val + self.reg * self.params[key[1:]]
                for key, val in hidden.iteritems() if key[:2] == 'dW'}
     # Paramerters b
-    list_db = {key[1:]: val
+    list_db = { key[1:]: val
                 for key, val in hidden.iteritems() if key[:2] == 'db'}
     # Parameters gamma
-    list_dgamma = {key[1:]: val
+    list_dgamma = { key[1:]: val
                     for key, val in hidden.iteritems() if key[:6] == 'dgamma'}
     # Paramters beta
-    list_dbeta = {key[1:]: val
-                  for key, val in hidden.iteritems() if key[:5] == 'dbeta'}
+    list_dbeta = {  key[1:]: val
+                    for key, val in hidden.iteritems() if key[:5] == 'dbeta'}
 
     grads = {}
     grads.update(list_dw)
