@@ -580,7 +580,21 @@ def max_pool_forward_naive(x, pool_param):
   #############################################################################
   # TODO: Implement the max pooling forward pass                              #
   #############################################################################
-  pass
+
+  N, C, H, W = x.shape
+  S = pool_param["stride"]
+  H_P = pool_param["pool_height"]
+  W_P = pool_param["pool_width"]
+  HH = 1 + (H - H_P) / S
+  WW = 1 + (W - W_P) / S
+
+  out = np.zeros((N,C,HH,WW))
+  for n in xrange(N): #data
+    for depth in xrange(C): #depth
+      for r in xrange(HH): #row
+        for c in xrange(WW): #column
+          out[n,depth,r,c] = np.max(x[n,depth,r*S:r*S+H_P,c*S:c*S+W_P])
+
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -603,7 +617,24 @@ def max_pool_backward_naive(dout, cache):
   #############################################################################
   # TODO: Implement the max pooling backward pass                             #
   #############################################################################
-  pass
+  x, pool_param = cache
+
+  N, C, H, W = x.shape
+  S = pool_param["stride"]
+  H_P = pool_param["pool_height"]
+  W_P = pool_param["pool_width"]
+  N,C,HH,WW = dout.shape
+
+  dx = np.zeros(x.shape)
+
+  for n in xrange(N): #data
+    for depth in xrange(C): #depth
+      for r in xrange(HH): #row
+        for c in xrange(WW): #column
+          x_pool = x[n,depth,r*S:r*S+H_P,c*S:c*S+W_P]
+          mask = (x_pool == np.max(x_pool))
+          dx[n,depth,r*S:r*S+H_P,c*S:c*S+W_P] += mask*dout[n,depth,r,c]
+
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
