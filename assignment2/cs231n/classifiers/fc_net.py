@@ -265,7 +265,7 @@ class FullyConnectedNet(object):
     # layer, etc.                                                              #
     ############################################################################
 
-    # We are gonna store everythin in a dictionnary hidden
+    # We are gonna store everythin in a dictionary hidden
     hidden = {}
     hidden['h0'] = X # X.reshape(X.shape[0], np.prod(X.shape[1:]))
     if self.use_dropout:
@@ -350,6 +350,8 @@ class FullyConnectedNet(object):
     for i in range(self.L)[::-1]:
         idx = i + 1
         dh = hidden['dh' + str(idx)]
+
+
         h_cache = hidden['cache_h' + str(idx)]
         if idx == self.L:
             dh, dw, db = affine_backward(dh, h_cache)
