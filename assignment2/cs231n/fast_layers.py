@@ -51,7 +51,7 @@ def conv_forward_strides(x, w, b, conv_param):
   # Pad the input
   p = pad
   x_padded = np.pad(x, ((0, 0), (0, 0), (p, p), (p, p)), mode='constant')
-  
+
   # Figure out output dimensions
   H += 2 * pad
   W += 2 * pad
@@ -68,6 +68,7 @@ def conv_forward_strides(x, w, b, conv_param):
   x_cols.shape = (C * HH * WW, N * out_h * out_w)
 
   # Now all our convolutions are a big matrix multiply
+  # print "w: "+ str(w.shape) + " x_cols: " + str(x_cols.shape)
   res = w.reshape(F, -1).dot(x_cols) + b.reshape(-1, 1)
 
   # Reshape the output
@@ -81,7 +82,7 @@ def conv_forward_strides(x, w, b, conv_param):
 
   cache = (x, w, b, conv_param, x_cols)
   return out, cache
-  
+
 
 def conv_backward_strides(dout, cache):
   x, w, b, conv_param, x_cols = cache

@@ -5,18 +5,20 @@ from cs231n.fast_layers import *
 from cs231n.layer_utils import *
 
 
-class ThreeLayerConvNet(object):
+class ConvNetModel1(object):
   """
-  A three-layer convolutional network with the following architecture:
+  A three convolutional network with the following architecture:
 
-  conv - relu - 2x2 max pool - affine - relu - affine - softmax
+  [conv-relu-pool]xN - conv - relu - [affine]xM - [softmax or SVM]
+  # [conv-relu-pool]XN - [affine]XM - [softmax or SVM]
+  # [conv-relu-conv-relu-pool]xN - [affine]xM - [softmax or SVM]
 
   The network operates on minibatches of data that have shape (N, C, H, W)
   consisting of N images, each with height H and width W and with C input
   channels.
   """
 
-  def __init__(self, input_dim=(3, 32, 32), num_filters=64, filter_size=7,
+  def __init__(self, input_dim=(3, 32, 32), num_filters=32, filter_size=7,
                hidden_dim=100, num_classes=10, weight_scale=1e-3, reg=0.0,
                dtype=np.float32):
     """
@@ -62,11 +64,12 @@ class ThreeLayerConvNet(object):
 
     self.params['W1'] = weight_scale * np.random.randn(F,C,F_H,F_W)
     self.params['b1'] = weight_scale * np.random.randn(F)
-    N="mini-batch"
-    print "After Conv Relu: "
-    print "Input :"+ str((N,C,H,W))
-    print "W1: "+str((F,C,F_H,F_W))
-    print "Ouput :"+ str((N,F,Hc,Wc))
+
+    # N="mini-batch"
+    # print "After Conv Relu: "
+    # print "Input :"+ str((N,C,H,W))
+    # print "W1: "+str((F,C,F_H,F_W))
+    # print "Ouput :"+ str((N,F,Hc,Wc))
 
     # Pool layer : 2*2
     # Input : (N,F,Hc,Wc)
@@ -78,30 +81,34 @@ class ThreeLayerConvNet(object):
     Hp = (Hc - height_pool) / stride_pool + 1
     Wp = (Wc - width_pool) / stride_pool + 1
 
-    print "After Pool: "
-    print "Input :"+ str((N,F,Hc,Wc))
-    print "Output :"+ str((N,F,Hp,Wp))
+    # print "After Pool: "
+    # print "Input :"+ str((N,F,Hc,Wc))
+    # print "Ouput :"+ str((N,F,Hp,Wp))
 
-    # Hidden Affine - relu layer
-    # parameters (F*Hp*Wp,Hh)
-    # Input: (N,F,Hp,Wp) #(N,F*Hp*Wp)
-    # Output: (N,Hh)
+    # Conv relu layer
+    # Input size : (N,F,Hp,Wp)
+    # Output size : (N,F,Hc,Wc)
+    F_H = filter_size
+    F_W = filter_size
+    S = 1 #stride
+    P = (filter_size - 1) / 2 # padding
+    Hc = 1 + (Hp + 2 * P - F_H) / S
+    Wc = 1 + (Wp + 2 * P - F_W) / S
 
-    Hh = hidden_dim
-    self.params['W2'] = weight_scale * np.random.randn(F * Hp * Wp, Hh)
-    self.params['b2'] = np.zeros(Hh)
+    self.params['W2'] = weight_scale * np.random.randn(F,F,F_H,F_W)
+    self.params['b2'] = weight_scale * np.random.randn(F)
 
-    print "After Hidden Affine Relu: "
-    print "Input :"+ str((N,F,Hp,Wp))+" =>"+str((N,F*Hp*Wp))
-    print "W1: "+str((F * Hp * Wp, Hh))
-    print "Output :"+ str((N,Hh))
+    # print "After Conv Relu: "
+    # print "Input :"+ str((N,F,Hp,Wp))
+    # print "W2: "+str((F,F,F_H,F_W))
+    # print "Ouput :"+ str((N,F,Hc,Wc))
 
-    # Output Affine - relu layer
-    # parameters (Hh,num_classes)
-    # Input: (N,Hh)
+    # Output Affine layer
+    # parameters (F*Hc*Wc,num_classes)
+    # Input: (N,F*Hc*Wc)
     # Output: (N,num_classes)
 
-    self.params['W3'] = weight_scale * np.random.randn(Hh, num_classes)
+    self.params['W3'] = weight_scale * np.random.randn(F*Hc*Wc, num_classes)
     self.params['b3'] = np.zeros(num_classes)
 
     ############################################################################
@@ -135,24 +142,24 @@ class ThreeLayerConvNet(object):
     # computing the class scores for X and storing them in the scores          #
     # variable.                                                                #
     ############################################################################
-    print "======================="
-    print "X.shape: "+str(X.shape)
+    # print "======================="
+    # print "X.shape: "+str(X.shape)
 
     # Forward into the conv_relu_pool input layer1
     out1, cache1 = conv_relu_pool_forward(X, W1, b1, conv_param, pool_param)
-    print "W1.shape: "+str(W1.shape)
-    print "out1.shape: "+str(out1.shape)
+    # print "W1.shape: "+str(W1.shape)
+    # print "out1.shape: "+str(out1.shape)
 
-    # Forward into the affine_relu hidden layer2
-    out2, cache2 = affine_relu_forward(out1, W2, b2)
-    print "W2.shape: "+str(W2.shape)
-    print "out2.shape: "+str(out2.shape)
+    # Forward into the conv_relu layer2
+    out2, cache2 = conv_relu_forward(out1, W2, b2, conv_param)
+    # print "W2.shape: "+str(W2.shape)
+    # print "out2.shape: "+str(out2.shape)
 
     # Forward into the affine output layer3
     out3, cache3 = affine_forward(out2, W3, b3)
     scores = out3
-    print "W3.shape: "+str(W3.shape)
-    print "out3.shape: "+str(out3.shape)
+    # print "W3.shape: "+str(W3.shape)
+    # print "out3.shape: "+str(out3.shape)
 
     ############################################################################
     #                             END OF YOUR CODE                             #
@@ -175,7 +182,7 @@ class ThreeLayerConvNet(object):
     loss = data_loss + reg_loss
 
     dout3, grads['W3'], grads['b3'] = affine_backward(dscores, cache3)
-    dout2, grads['W2'], grads['b2'] = affine_relu_backward(dout3, cache2)
+    dout2, grads['W2'], grads['b2'] = conv_relu_backward(dout3, cache2)
     dout1, grads['W1'], grads['b1'] = conv_relu_pool_backward(dout2, cache1)
 
     grads['W1'] += self.reg * W1
