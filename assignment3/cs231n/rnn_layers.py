@@ -177,7 +177,7 @@ def rnn_backward(dh, cache):
 
   for t in reversed(xrange(T)):
     dh[:,t,:]  += dprev_h # updating the previous layer dh
-    dx_, dprev_h, dWx_, dWh_, db_ = rnn_step_backward(dh[:,t,:], cache[t-1])
+    dx_, dprev_h, dWx_, dWh_, db_ = rnn_step_backward(dh[:,t,:], cache[t])
     dx[:,t,:]  += dx_
     dWx        += dWx_
     dWh        += dWh_
