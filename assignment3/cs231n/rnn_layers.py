@@ -173,16 +173,15 @@ def rnn_backward(dh, cache):
   D = cache[0][0].shape[1] # D taken from x in cache
   dx, dprev_h = np.zeros((N, T, D)),np.zeros((N, H))
   dWx, dWh, db = np.zeros((D, H)), np.zeros((H, H)), np.zeros((H,))
+  dh = dh.copy()
 
-  # this has issues, stuck here
   for t in reversed(xrange(T)):
-    dh[:,t,:]  += dprev_h
-    dx_, dprev_h, dWx_, dWh_, db_ = rnn_step_backward(dh[:,t,:], cache[t])
+    dh[:,t,:]  += dprev_h # updating the previous layer dh
+    dx_, dprev_h, dWx_, dWh_, db_ = rnn_step_backward(dh[:,t,:], cache[t-1])
     dx[:,t,:]  += dx_
     dWx        += dWx_
     dWh        += dWh_
     db         += db_
-
   dh0 = dprev_h
 
   ##############################################################################
