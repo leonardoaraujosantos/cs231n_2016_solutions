@@ -47,7 +47,7 @@ def rnn_step_forward(x, prev_h, Wx, Wh, b):
   # step 4
   next_h = np.tanh(t)
 
-  cache = (x, prev_h, Wx, Wh, next_h)
+  cache = (x, prev_h.copy(), Wx, Wh, next_h)
 
   # next_h = np.tanh( np.dot(x, Wx) + np.dot(prev_h,Wh) + b.T)
 
@@ -182,6 +182,7 @@ def rnn_backward(dh, cache):
     dWx        += dWx_
     dWh        += dWh_
     db         += db_
+
   dh0 = dprev_h
 
   ##############################################################################
