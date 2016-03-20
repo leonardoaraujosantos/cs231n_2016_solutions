@@ -150,7 +150,10 @@ class CaptioningRNN(object):
     #  Use either a vanilla RNN or LSTM (depending on self.cell_type) to      #
     #     process the sequence of input word vectors and produce hidden state #
     #     vectors for all timesteps, producing an array of shape (N, T, H).   #
-    h, cache_rnn = rnn_forward(x, h0, Wx, Wh, b)
+    if self.cell_type == 'rnn':
+        h, cache_nn = rnn_forward(x, h0, Wx, Wh, b)
+    else:
+        h, cache_nn = lstm_forward(x, h0, Wx, Wh, b)
 
     # forward pass (4)
     #  Use a (temporal) affine transformation to compute scores over the    #
@@ -167,7 +170,10 @@ class CaptioningRNN(object):
     h_out, dW_vocab, db_vocab = temporal_affine_backward(dout, cache_h2out)
 
     # backward pass (3)
-    dx, dh0, dWx, dWh, db = rnn_backward(h_out, cache_rnn)
+    if self.cell_type == 'rnn':
+        dx, dh0, dWx, dWh, db = rnn_backward(h_out, cache_nn)
+    else:
+        dx, dh0, dWx, dWh, db = lstm_backward(h_out, cache_nn)
 
     # backward pass (2)
     dW_embed = word_embedding_backward(dx, cache_x2h)
@@ -249,6 +255,9 @@ class CaptioningRNN(object):
 
     # initial hiddel layer calculation
     h, _ = affine_forward(features, W_proj, b_proj)
+    if self.cell_type == 'lstm':
+        c = np.zeros(h.shape)
+
     # intial input is <START> token
     x = self._start * np.ones(N, dtype=np.int32)
 
@@ -258,7 +267,10 @@ class CaptioningRNN(object):
 
         # Make an RNN step using the previous hidden state and the embedded
         # current word to get the next hidden state.
-        h, _   = rnn_step_forward(x, h, Wx, Wh, b)
+        if self.cell_type == 'rnn':
+            h, _   = rnn_step_forward(x, h, Wx, Wh, b)
+        else:
+            h, c, _   = lstm_step_forward(x, h, c, Wx, Wh, b)
 
         # Apply the learned affine transformation to the next hidden state to
         # get scores for all words in the vocabulary
