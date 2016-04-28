@@ -21,7 +21,16 @@ print (correct)
 # Call softmax_loss reference
 result = cs231n.layers.softmax_loss(scores, correct)
 
-print('\nLoss:')
+print('\nSoftmax Loss:')
+print(result[0])
+
+print('\nDw:')
+print(result[1])
+
+# Call svm_loss reference
+result = cs231n.layers.svm_loss(scores, correct)
+
+print('\nSVM Loss:')
 print(result[0])
 
 print('\nDw:')
