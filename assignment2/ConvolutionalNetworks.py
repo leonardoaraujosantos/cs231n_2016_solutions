@@ -60,6 +60,8 @@ b = np.linspace(-0.1, 0.2, num=3)
 
 conv_param = {'stride': 2, 'pad': 1}
 out, _ = conv_forward_naive(x, w, b, conv_param)
+out_fast, _ = conv_forward_fast(x, w, b, conv_param)
+
 correct_out = np.array([[[[[-0.08759809, -0.10987781],
                            [-0.18387192, -0.2109216 ]],
                           [[ 0.21027089,  0.21661097],
@@ -77,6 +79,25 @@ correct_out = np.array([[[[[-0.08759809, -0.10987781],
 print 'Testing conv_forward_naive'
 print 'difference: ', rel_error(out, correct_out)
 
+from scipy.misc import imread, imresize
+puppy = imread('puppy.jpg')
+img_size = 200   # Make this smaller if it runs too slow
+puppy = imresize(puppy, (img_size, img_size))
+x = np.zeros((1,3, img_size, img_size))
+x[0,:, :, :] = puppy.transpose(2, 0, 1)
+w = np.zeros((1, 3, 3, 3))
+w[0, 2, :, :] = matrix('1 2 1; 0 0 0; -1 -2 -1')
+b = np.array([0])
+# Do a conv forward propagation
+out, _ = conv_forward_naive(x, w, b, {'stride': 1, 'pad': 1})
+
+imshow(puppy)
+plt.show()
+imshow(x[0,:, :, :].transpose(1, 2, 0).astype(uint8))
+plt.show()
+crazy = out[0,:,:,:];
+imshow(crazy[0,:,:])
+plt.show()
 
 # # Aside: Image processing via convolutions
 # 
@@ -96,7 +117,8 @@ x = np.zeros((2, 3, img_size, img_size))
 x[0, :, :, :] = imresize(puppy, (img_size, img_size)).transpose((2, 0, 1))
 x[1, :, :, :] = imresize(kitten_cropped, (img_size, img_size)).transpose((2, 0, 1))
 
-# Set up a convolutional weights holding 2 filters, each 3x3
+# Set up a convolutional weights holding 2 color filters, each 3x3
+# 2 filters, 3 channels, 3x3
 w = np.zeros((2, 3, 3, 3))
 
 # The first filter converts the image to grayscale.
